@@ -6,7 +6,7 @@
   <div class="flex items-start justify-between gap-3">
     <div class="pr-2">
       <h3 class="font-extrabold text-deep tracking-tight text-[1.02rem]" data-i18n="{{ title_key }}">{{ title }}</h3>
-      {% if desc_key %}<p class="text-xs text-ink/60 mt-1" data-i18n="{{ desc_key }}">{{ desc_key }}</p>{% endif %}
+      {% if desc_key %}<p class="text-xs text-ink/60 mt-1" data-i18n="{{ desc_key }}">{{ t(desc_key) }}</p>{% endif %}
     </div>
     <button type="button" class="btn-secondary btn-sm no-print" data-download="{{ id }}" data-i18n="charts.download">Download</button>
   </div>

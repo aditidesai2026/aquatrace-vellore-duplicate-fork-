@@ -2,3 +2,10 @@
 node_modules
 dist
 src/convex/_generated
+
+# AquaTrace (Flask)
+__pycache__/
+*.pyc
+aquatrace.db
+static/uploads/*
+!static/uploads/.gitkeep

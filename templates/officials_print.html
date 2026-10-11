@@ -50,11 +50,11 @@
             <td>{{ loop.index }}</td>
             <td>{{ h.zone }}</td>
             <td>{{ h.ward }}</td>
-            <td data-i18n="f.{{ h.code }}.title">{{ h.code }}</td>
+            <td data-i18n="f.{{ h.code }}.title">{{ t('f.' ~ h.code ~ '.title') }}</td>
             <td>{{ h.severity }}</td>
             <td>{{ h.report_count }}</td>
             <td>{{ h.first_seen_str }}</td>
-            <td data-i18n="f.{{ h.code }}.action">…</td>
+            <td data-i18n="f.{{ h.code }}.action">{{ t('f.' ~ h.code ~ '.action') }}</td>
             <td>{{ CONTACTS.get(h.department).dept if CONTACTS.get(h.department) else h.department }}</td>
             <td>{{ h.status }}</td>
             <td>YES</td>

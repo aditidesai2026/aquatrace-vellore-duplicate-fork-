@@ -58,8 +58,8 @@
                 <span class="badge badge-blue" data-i18n="off.lab">needs lab confirmation</span>
                 <span class="badge badge-ghost"><span data-i18n="off.reports_n">{{ h.report_count }}</span></span>
               </div>
-              <h3 class="text-lg font-extrabold tracking-tight text-deep mt-2" data-i18n="f.{{ h.code }}.title">{{ h.code }}</h3>
-              <p class="text-sm text-ink/75 mt-1" data-i18n="f.{{ h.code }}.desc">…</p>
+              <h3 class="text-lg font-extrabold tracking-tight text-deep mt-2" data-i18n="f.{{ h.code }}.title">{{ t('f.' ~ h.code ~ '.title') }}</h3>
+              <p class="text-sm text-ink/75 mt-1" data-i18n="f.{{ h.code }}.desc">{{ t('f.' ~ h.code ~ '.desc') }}</p>
               <p class="text-xs text-ink/60 mt-2">
                 <span data-i18n="off.first_seen">First seen</span>: {{ h.first_seen_str }} ·
                 <span data-i18n="off.active">active for</span> {{ h.days_active }} <span data-i18n="off.days">day(s)</span> ·
@@ -82,15 +82,15 @@
         <div class="grid gap-3 sm:grid-cols-2 mt-4">
           <div class="glass-inset p-4">
             <p class="text-[11px] font-bold uppercase tracking-widest text-aqua mb-1" data-i18n="result.first_action">First action</p>
-            <p class="text-sm font-semibold text-deep" data-i18n="f.{{ h.code }}.action">…</p>
+            <p class="text-sm font-semibold text-deep" data-i18n="f.{{ h.code }}.action">{{ t('f.' ~ h.code ~ '.action') }}</p>
             <p class="text-[11px] font-bold uppercase tracking-widest text-aqua mt-3 mb-1" data-i18n="off.quick">Quick low-cost actions first</p>
             <ul class="text-sm text-ink/75 space-y-1">
-              {% for a in h.quick_actions %}<li>• <span data-i18n="{{ a }}">…</span></li>{% endfor %}
+              {% for a in h.quick_actions %}<li>• <span data-i18n="{{ a }}">{{ t(a) }}</span></li>{% endfor %}
             </ul>
             {% if h.capital_works %}
             <p class="text-[11px] font-bold uppercase tracking-widest text-aqua mt-3 mb-1" data-i18n="off.capital">Then capital works</p>
             <ul class="text-sm text-ink/75 space-y-1">
-              {% for c in h.capital_works %}<li>• <span data-i18n="{{ c }}">…</span></li>{% endfor %}
+              {% for c in h.capital_works %}<li>• <span data-i18n="{{ c }}">{{ t(c) }}</span></li>{% endfor %}
             </ul>
             {% endif %}
           </div>
@@ -152,7 +152,7 @@
             <td><span class="badge {% if r.severity in ['CRITICAL','HIGH'] %}badge-red{% elif r.severity == 'MEDIUM' %}badge-amber{% elif r.severity == 'LOW' %}badge-blue{% else %}badge-green{% endif %}">{{ r.severity }}</span></td>
             <td class="text-xs">
               {% for f in r.diagnosis.get('findings', []) %}
-                <span class="badge badge-ghost mb-1" data-i18n="f.{{ f.code }}.title">{{ f.code }}</span>
+                <span class="badge badge-ghost mb-1" data-i18n="f.{{ f.code }}.title">{{ t('f.' ~ f.code ~ '.title') }}</span>
               {% endfor %}
               {% if r.is_demo %}<span class="badge badge-amber" data-i18n="demo.badge">Demo data</span>{% endif %}
             </td>

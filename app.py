@@ -47,6 +47,26 @@ app.config["MAX_CONTENT_LENGTH"] = 3 * 1024 * 1024  # 3 MB uploads
 app.config["UPLOAD_FOLDER"] = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                            "static", "uploads")
 
+# English strings come from the same file the browser uses for the language
+# toggle, so there is exactly one place where every translation lives.
+I18N_EN = {}
+
+
+def _load_english():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "static", "js", "i18n.js")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+    except OSError:
+        return
+    pattern = re.compile(r'^\s*"([^"]+)":\s*\[\s*"((?:[^"\\]|\\.)*)"\s*,', re.M)
+    for m in pattern.finditer(text):
+        I18N_EN[m.group(1)] = m.group(2).replace('\\"', '"')
+
+
+_load_english()
+
 ALLOWED_IMAGE_EXT = {"png", "jpg", "jpeg", "webp", "gif"}
 
 
@@ -71,6 +91,8 @@ def inject_globals():
         "now": datetime.now(timezone.utc),
         "is_official": bool(session.get("official")),
         "lang": request.args.get("lang") or session.get("lang") or "en",
+        # Server-side English text for content the browser re-translates.
+        "t": lambda key: I18N_EN.get(key, key),
     }
 
 
