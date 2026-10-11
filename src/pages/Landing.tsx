@@ -121,7 +121,10 @@ async function openApp(path: string) {
     const res = await fetch(`${APP}/api/health`, { signal: ctrl.signal });
     clearTimeout(timer);
     if (res.ok) {
-      window.open(APP + path, "_blank", "noopener");
+      const url = APP + path;
+      const win = window.open(url, "_blank", "noopener");
+      // Popup blocked? Follow the link in this tab instead.
+      if (!win) window.location.href = url;
       return;
     }
   } catch {

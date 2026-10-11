@@ -23,6 +23,12 @@ import config  # noqa: E402
 import water_diagnosis as wd  # noqa: E402
 
 
+@aquatrace.app.route("/__boom")
+def _boom():
+    """Test-only route used to check the friendly 500 page."""
+    raise RuntimeError("boom")
+
+
 class PageTests(unittest.TestCase):
     def setUp(self):
         aquatrace.app.config["TESTING"] = True
@@ -46,6 +52,26 @@ class PageTests(unittest.TestCase):
                      "/officials", "/does-not-exist"):
             expected = 404 if path == "/does-not-exist" else 200
             self._get(path, expected)
+
+    def test_every_template_exists(self):
+        import jinja2
+        for name in ("500.html", "404.html", "base.html", "result.html",
+                     "officials.html", "officials_print.html"):
+            try:
+                aquatrace.app.jinja_env.get_template(name)
+            except jinja2.TemplateNotFound:
+                self.fail("missing template: %s" % name)
+
+    def test_500_page_is_friendly(self):
+        aquatrace.app.config["PROPAGATE_EXCEPTIONS"] = False
+        try:
+            r = self.client.get("/__boom")
+            self.assertEqual(r.status_code, 500)
+            body = r.get_data(as_text=True)
+            self.assertIn("Something broke", body)
+            self.assertIn("Please go back and try again", body)
+        finally:
+            aquatrace.app.config["PROPAGATE_EXCEPTIONS"] = None
 
     def test_wizard_has_six_steps_and_validation_attrs(self):
         body = self._get("/check").get_data(as_text=True)

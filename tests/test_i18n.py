@@ -39,7 +39,8 @@ SEVERITIES = [s.lower() for s in wd.SEVERITY_ORDER]
 
 def dictionary():
     """Parse the flat [english, tamil] dictionary out of i18n.js."""
-    text = open(I18N_JS, encoding="utf-8").read()
+    with open(I18N_JS, encoding="utf-8") as fh:
+        text = fh.read()
     entries = {}
     for m in re.finditer(r'^\s*"([^"]+)":\s*\[\s*"((?:[^"\\]|\\.)*)"\s*,\s*"((?:[^"\\]|\\.)*)"\s*\]',
                          text, re.M):

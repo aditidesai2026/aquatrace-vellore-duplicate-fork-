@@ -105,11 +105,14 @@ chlorination, advisories) are listed before capital works, and **every hotspot i
 ## Tests
 
 ```bash
-python3 tests/test_water_diagnosis.py     # 39 unit tests for the rules
-python3 tests/test_app.py                 # 19 route / API / privacy smoke tests
+python3 -m unittest discover -s tests     # all 67 tests
+python3 tests/test_water_diagnosis.py     # rules: limits, findings, hotspots
+python3 tests/test_app.py                 # pages, API, officials, privacy
+python3 tests/test_i18n.py                # every UI key has English + Tamil
 ```
 
-Both suites use only the standard library `unittest`.
+All suites use only the standard library `unittest`. They run against a
+temporary SQLite file, so they never touch your real data.
 
 ---
 

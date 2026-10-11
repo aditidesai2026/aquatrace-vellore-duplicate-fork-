@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Something broke{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <div class="glass-panel p-8 text-center">
+    <span class="emoji text-5xl" aria-hidden="true">🌊</span>
+    <h1 class="text-2xl font-extrabold tracking-tight text-deep mt-4" data-i18n="e500.title">Something broke</h1>
+    <p class="text-sm text-ink/70 mt-2" data-i18n="e500.text">Please go back and try again. If it keeps happening, use the contact page to tell us.</p>
+    <div class="flex flex-wrap gap-3 justify-center mt-6">
+      <a class="btn-primary" href="{{ url_for('home') }}" data-i18n="nav.home">Home</a>
+      <a class="btn-secondary" href="{{ url_for('contacts_page') }}" data-i18n="next_contacts">All contacts and helplines</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
