@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Learn{% endblock %}
+
+{% block content %}
+<div class="grid gap-6">
+  <div class="glass-panel p-6 sm:p-8">
+    <span class="badge badge-teal" data-i18n="learn.badge">Plain-language guide</span>
+    <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-deep mt-3" data-i18n="learn.title">Understanding your water</h1>
+    <p class="text-sm sm:text-base text-ink/75 mt-2 max-w-2xl" data-i18n="learn.sub">Four numbers tell you most of what a home test kit can. Here is what each one means, what is normal, and how they connect.</p>
+  </div>
+
+  <section class="grid gap-5 lg:grid-cols-2">
+    {% macro explainer(key, emoji, label, verdict) %}
+    <article class="glass-panel p-6">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl" aria-hidden="true">{{ emoji }}</span>
+        <h2 class="text-lg font-extrabold tracking-tight text-deep"><span class="term" tabindex="0" data-i18n="term.{{ key }}" data-tip-key="tip.{{ key }}">{{ label }}</span> <span data-i18n="learn.{{ key }}_name">·</span></h2>
+      </div>
+      <p class="text-sm text-ink/75 mt-3" data-i18n="learn.{{ key }}_what">…</p>
+
+      <div class="glass-inset p-4 mt-4">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-aqua mb-2" data-i18n="learn.range">Safe and unsafe ranges</p>
+        <ul class="space-y-2 text-sm">
+          <li class="flex items-start gap-2"><span class="state-pill state-ok" aria-hidden="true">✓</span><span data-i18n="learn.{{ key }}_ok">…</span></li>
+          <li class="flex items-start gap-2"><span class="state-pill state-watch" aria-hidden="true">!</span><span data-i18n="learn.{{ key }}_watch">…</span></li>
+          <li class="flex items-start gap-2"><span class="state-pill state-unsafe" aria-hidden="true">✕</span><span data-i18n="learn.{{ key }}_bad">…</span></li>
+        </ul>
+        <p class="text-xs text-ink/60 mt-3"><span data-i18n="learn.verdict">In short</span>: <strong>{{ verdict }}</strong></p>
+      </div>
+
+      <p class="text-sm text-ink/75 mt-4" data-i18n="learn.{{ key }}_why">…</p>
+    </article>
+    {% endmacro %}
+
+    {{ explainer('ph', '⚗️', 'pH', '6.5 to 8.5 is normal') }}
+    {{ explainer('turbidity', '🌫️', 'Turbidity', 'Under 1 NTU is clear') }}
+    {{ explainer('tds', '🧂', 'TDS', 'Under 500 mg/L tastes good') }}
+    {{ explainer('dissolved_oxygen', '🫧', 'Dissolved oxygen', '4 mg/L or more is healthy') }}
+  </section>
+
+  <!-- Test kits -->
+  <section class="glass-panel p-6 sm:p-8">
+    <h2 class="text-xl font-extrabold tracking-tight text-deep" data-i18n="learn.kits">How to use a test kit</h2>
+    <ol class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-5">
+      {% for step in [
+        ('1', 'Rinse', 'learn.kit1', 'Rinse the bottle or glass with the water you are testing, not with tap water from earlier.'),
+        ('2', 'Fill', 'learn.kit2', 'Fill to the line and close the lid. Do not touch the inside of the container.'),
+        ('3', 'Wait', 'learn.kit3', 'Let the sample settle for a minute or two. Test it close to the time you collected it.'),
+        ('4', 'Test', 'learn.kit4', 'Dip the strip, probe or tablet as the kit instructions say, then read the number or colour.'),
+        ('5', 'Record', 'learn.kit5', 'Type the numbers into AquaTrace straight away so you do not mix up samples.'),
+        ('6', 'Repeat', 'learn.kit6', 'Test again on a different day. One reading is a clue; several readings are a pattern.')
+      ] %}
+      <li class="glass-inset p-4 flex gap-3">
+        <span class="num-dot" aria-hidden="true">{{ step[0] }}</span>
+        <div>
+          <p class="font-bold text-[.95rem] text-deep" data-i18n="{{ step[2] }}">{{ step[1] }}</p>
+          <p class="text-sm text-ink/70 mt-1">{{ step[3] }}</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    <p class="text-sm text-ink/70 mt-4" data-i18n="learn.kit_note">Keep the kit out of direct sun and check the expiry date — old strips give wrong colours.</p>
+  </section>
+
+  <!-- How they relate -->
+  <section class="glass-panel p-6 sm:p-8">
+    <h2 class="text-xl font-extrabold tracking-tight text-deep" data-i18n="learn.relate">How pH, TDS and turbidity relate</h2>
+    <div class="grid gap-4 sm:grid-cols-3 mt-5">
+      <div class="sev-card sev-MEDIUM">
+        <p class="font-bold text-deep" data-i18n="learn.rel1_t">Low pH + high TDS</p>
+        <p class="text-sm text-ink/75 mt-1" data-i18n="learn.rel1_d">Acid water carrying a lot of dissolved salts. This often points to industrial or mine discharge, or to pipes corroding and releasing metals.</p>
+      </div>
+      <div class="sev-card sev-LOW">
+        <p class="font-bold text-deep" data-i18n="learn.rel2_t">Normal pH + high TDS</p>
+        <p class="text-sm text-ink/75 mt-1" data-i18n="learn.rel2_d">Neutral salts — salinity. pH on its own would completely miss this, which is why AquaTrace always checks both numbers together.</p>
+      </div>
+      <div class="sev-card sev-HIGH">
+        <p class="font-bold text-deep" data-i18n="learn.rel3_t">Cloudy + low oxygen + smell</p>
+        <p class="text-sm text-ink/75 mt-1" data-i18n="learn.rel3_d">A strong sign of sewage getting into the supply. Do not drink it — report it to the City Health Officer immediately.</p>
+      </div>
+    </div>
+    <div class="glass-inset p-4 mt-4">
+      <p class="text-sm text-ink/75" data-i18n="learn.rel_note">Turbidity also hides germs: particles protect bacteria and viruses from chlorine, so cloudy water is harder to disinfect. When pH is above 8.5, chlorine also works less well.</p>
+    </div>
+  </section>
+
+  <!-- Limits table -->
+  <section class="glass-panel p-6 sm:p-8">
+    <h2 class="text-xl font-extrabold tracking-tight text-deep" data-i18n="learn.limits">The limits AquaTrace uses</h2>
+    <div class="scroll-x mt-4">
+      <table class="table-glass">
+        <thead>
+          <tr>
+            <th data-i18n="learn.parameter">Parameter</th>
+            <th data-i18n="learn.acceptable">Acceptable</th>
+            <th data-i18n="learn.watch">Watch</th>
+            <th data-i18n="learn.problem">Problem</th>
+            <th data-i18n="learn.source">Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="term" tabindex="0" data-i18n="term.ph" data-tip-key="tip.ph">pH</span></td>
+            <td>6.5 – 8.5</td><td>6.0 – 6.5 or 8.5 – 9.0</td><td>&lt; 6.0 or &gt; 9.0</td>
+            <td>BIS IS 10500:2012 · WHO</td>
+          </tr>
+          <tr>
+            <td><span class="term" tabindex="0" data-i18n="term.turbidity" data-tip-key="tip.turbidity">Turbidity</span></td>
+            <td>≤ 1 NTU</td><td>1 – 5 NTU</td><td>&gt; 5 NTU</td>
+            <td>BIS IS 10500:2012</td>
+          </tr>
+          <tr>
+            <td><span class="term" tabindex="0" data-i18n="term.tds" data-tip-key="tip.tds">TDS</span></td>
+            <td>≤ 500 mg/L</td><td>500 – 2000 mg/L</td><td>&gt; 2000 mg/L</td>
+            <td>BIS IS 10500:2012 · WHO (taste &gt; 1000)</td>
+          </tr>
+          <tr>
+            <td><span class="term" tabindex="0" data-i18n="term.dissolved_oxygen" data-tip-key="tip.dissolved_oxygen">Dissolved oxygen</span></td>
+            <td>≥ 4 mg/L</td><td>2 – 4 mg/L</td><td>&lt; 2 mg/L</td>
+            <td data-i18n="learn.project_rule">AquaTrace project rule — not a drinking water standard</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-sm font-semibold text-deep mt-4" data-i18n="result.disclaimer">This is indicative. It does NOT prove water is safe to drink. Bacteria, nitrate, fluoride, arsenic and heavy metals are not tested here. Please confirm with a lab test.</p>
+  </section>
+
+  <section class="glass-panel p-6 flex flex-wrap items-center justify-between gap-4">
+    <p class="font-bold text-deep" data-i18n="learn.ready">Ready to test your own water?</p>
+    <a class="btn-primary" href="{{ url_for('check') }}" data-i18n="home.cta">Check my water</a>
+  </section>
+</div>
+
+<style>
+  .num-dot { flex: none; display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: .8rem;
+    color: #fff; font-weight: 800; font-size: .9rem; background: linear-gradient(135deg, #0ea5e9, #0d9488);
+    border: 1px solid rgba(255,255,255,.8); }
+</style>
+{% endblock %}

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" data-lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#eaf7ff">
+  <title>{% block title %}AquaTrace{% endblock %} · AquaTrace</title>
+  <meta name="description" content="AquaTrace - water quality monitoring and action planning for Vellore, starting with Katpadi.">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#06283f',
+            deep: '#0b3b6f',
+            aqua: '#0e7490',
+            teal2: '#0d9488',
+            sky2: '#38bdf8',
+            sand: '#f6fbff'
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Noto Sans Tamil"', 'system-ui', 'sans-serif'],
+            ta: ['"Noto Sans Tamil"', '"Plus Jakarta Sans"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/aquatrace.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="aqua-body font-sans text-ink antialiased">
+
+  <!-- Decorative water blobs (light glassmorphism, no dark surfaces) -->
+  <div class="aqua-bg" aria-hidden="true">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+    <span class="blob blob-4"></span>
+  </div>
+
+  <a href="#main" class="skip-link" data-i18n="a11y.skip">Skip to content</a>
+
+  <header class="sticky top-0 z-40 backdrop-blur-xl bg-white/55 border-b border-white/70">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <div class="flex h-16 items-center justify-between gap-3">
+        <a href="{{ url_for('home') }}" class="group flex items-center gap-2 shrink-0" aria-label="AquaTrace home">
+          <span class="logo-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.7S5.5 10 5.5 14.2a6.5 6.5 0 0 0 13 0C18.5 10 12 2.7 12 2.7z"/><path d="M9 14.5a3 3 0 0 0 3 3"/></svg>
+          </span>
+          <span class="font-extrabold tracking-tight text-[1.05rem] text-deep">Aqua<span class="text-teal2">Trace</span></span>
+        </a>
+
+        <nav class="hidden md:flex items-center gap-1" aria-label="Main">
+          <a class="nav-link" href="{{ url_for('home') }}" data-i18n="nav.home">Home</a>
+          <a class="nav-link" href="{{ url_for('map_page') }}" data-i18n="nav.map">Community map</a>
+          <a class="nav-link" href="{{ url_for('charts_page') }}" data-i18n="nav.charts">Charts</a>
+          <a class="nav-link" href="{{ url_for('learn_page') }}" data-i18n="nav.learn">Learn</a>
+          <a class="nav-link" href="{{ url_for('contacts_page') }}" data-i18n="nav.contacts">Contact</a>
+          {% if is_official %}<a class="nav-link" href="{{ url_for('officials_dashboard') }}" data-i18n="nav.officials">Officials</a>{% endif %}
+        </nav>
+
+        <div class="flex items-center gap-2">
+          <button id="lang-toggle" class="pill-btn" type="button" aria-label="Switch language">
+            <span class="lang-en">தமிழ்</span><span class="lang-ta hidden">English</span>
+          </button>
+          <a href="{{ url_for('check') }}" class="btn-primary hidden sm:inline-flex !py-2.5" data-i18n="nav.report">Report a problem</a>
+          <button id="menu-btn" class="pill-btn md:hidden" type="button" aria-expanded="false" aria-controls="mobile-nav" aria-label="Open menu">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="mobile-nav" class="hidden md:hidden border-t border-white/70 bg-white/70 backdrop-blur-xl">
+      <nav class="mx-auto max-w-6xl px-4 py-3 grid gap-1" aria-label="Mobile">
+        <a class="nav-link" href="{{ url_for('home') }}" data-i18n="nav.home">Home</a>
+        <a class="nav-link" href="{{ url_for('check') }}" data-i18n="nav.check">Check my water</a>
+        <a class="nav-link" href="{{ url_for('map_page') }}" data-i18n="nav.map">Community map</a>
+        <a class="nav-link" href="{{ url_for('charts_page') }}" data-i18n="nav.charts">Charts</a>
+        <a class="nav-link" href="{{ url_for('learn_page') }}" data-i18n="nav.learn">Learn</a>
+        <a class="nav-link" href="{{ url_for('contacts_page') }}" data-i18n="nav.contacts">Contact and helpline</a>
+        <a class="nav-link" href="{{ url_for('officials') }}" data-i18n="nav.officials">Officials</a>
+      </nav>
+    </div>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-4">
+        {% for category, message in messages %}
+          <div class="glass-panel p-4 mb-2 flex items-start gap-3 {% if category == 'error' %}ring-1 ring-rose-300/70{% else %}ring-1 ring-teal-300/60{% endif %}" role="alert">
+            <span class="status-dot {% if category == 'error' %}dot-red{% else %}dot-green{% endif %} mt-1"></span>
+            <p class="text-sm">{{ message }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main id="main" class="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-10">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="mt-10 border-t border-white/70 bg-white/50 backdrop-blur-xl">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 py-10">
+      <div class="flex flex-wrap items-center gap-2 mb-6">
+        <span class="badge badge-teal" data-i18n="home.serving">Serving Vellore, starting with Katpadi</span>
+        <span class="badge badge-ghost"><span data-i18n="contacts.last_checked">Last checked</span>: {{ LAST_CHECKED }}</span>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {% for key in ['grievance', 'commissioner', 'engineer', 'health'] %}
+          {% set c = CONTACTS[key] %}
+          <div class="glass-panel p-4">
+            <p class="text-[11px] uppercase tracking-widest text-aqua/80 font-bold">{{ c.dept }}</p>
+            <p class="text-sm font-semibold mt-1 text-deep">{{ c.person }}</p>
+            <p class="text-xs text-ink/60 mt-0.5">{{ c.address }}</p>
+            <div class="flex flex-wrap gap-2 mt-3">
+              {% if c.phone %}
+                <a class="btn-call" href="tel:{{ c.phone|replace('-', '') }}"><span aria-hidden="true">📞</span> {{ c.phone }}</a>
+              {% endif %}
+              {% if c.email %}
+                <a class="btn-mail" href="mailto:{{ c.email }}"><span aria-hidden="true">✉️</span> {{ c.email }}</a>
+              {% endif %}
+            </div>
+            {% if c.to_confirm %}<span class="badge badge-amber mt-2" data-i18n="contacts.to_confirm">to confirm</span>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="mt-8 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between text-sm text-ink/70">
+        <p>© {{ now.year }} AquaTrace · <span data-i18n="footer.tagline">Community water reporting for Vellore</span></p>
+        <div class="flex flex-wrap gap-3">
+          <a class="underline decoration-teal2/50 underline-offset-4 hover:text-deep" href="{{ url_for('contacts_page') }}" data-i18n="footer.all_contacts">All contacts and helplines</a>
+          <a class="underline decoration-teal2/50 underline-offset-4 hover:text-deep" href="{{ url_for('officials') }}" data-i18n="nav.officials">Officials</a>
+        </div>
+      </div>
+      <p class="mt-4 text-xs text-ink/50 max-w-3xl" data-i18n="footer.disclaimer">AquaTrace readings are indicative only. They do not prove water is safe to drink. Confirm with a laboratory test.</p>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Officials dashboard{% endblock %}
+
+{% block content %}
+<div class="grid gap-6">
+  <div class="glass-panel p-5 sm:p-7 no-print">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <span class="badge badge-blue" data-i18n="off.badge">VCMC officials only</span>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-deep mt-2" data-i18n="off.title">Officials dashboard</h1>
+        <p class="text-sm text-ink/70 mt-1 max-w-2xl" data-i18n="off.sub">Ranked hotspots for Vellore, quick low-cost actions first, and a status you can move from Submitted to Resolved.</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <a class="btn-secondary btn-sm" href="{{ url_for('officials_export_csv') }}"><span aria-hidden="true">⬇️</span> <span data-i18n="off.csv">Download weekly priority CSV</span></a>
+        <a class="btn-secondary btn-sm" href="{{ url_for('officials_print') }}"><span aria-hidden="true">🖨️</span> <span data-i18n="off.pdf">Print / save as PDF</span></a>
+        <form method="post" action="{{ url_for('officials_logout') }}"><button class="btn-quiet btn-sm" type="submit" data-i18n="off.signout">Sign out</button></form>
+      </div>
+    </div>
+
+    <div class="grid gap-3 sm:grid-cols-4 mt-5">
+      <div class="glass-inset p-4"><p class="text-[11px] font-bold uppercase tracking-widest text-aqua" data-i18n="off.stat_reports">Reports</p><p class="stat-num mt-1">{{ stats.total }}</p></div>
+      <div class="glass-inset p-4"><p class="text-[11px] font-bold uppercase tracking-widest text-aqua" data-i18n="off.stat_hotspots">Hotspots</p><p class="stat-num mt-1">{{ hotspots|length }}</p></div>
+      <div class="glass-inset p-4"><p class="text-[11px] font-bold uppercase tracking-widest text-aqua" data-i18n="off.stat_unsafe">Unsafe reports</p><p class="stat-num mt-1">{{ stats.unsafe }}</p></div>
+      <div class="glass-inset p-4"><p class="text-[11px] font-bold uppercase tracking-widest text-aqua" data-i18n="off.stat_wards">Wards reporting</p><p class="stat-num mt-1">{{ stats.wards_covered }} / {{ stats.wards }}</p></div>
+    </div>
+  </div>
+
+  <!-- Hotspots -->
+  <section aria-labelledby="hotspots-title">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 id="hotspots-title" class="text-xl font-extrabold tracking-tight text-deep" data-i18n="off.hotspots">Ranked hotspots</h2>
+      <p class="text-xs text-ink/60" data-i18n="off.rule">3+ reports with the same diagnosis in a ward within 7 days, or any single CRITICAL report.</p>
+    </div>
+
+    {% if not hotspots %}
+    <div class="glass-panel empty-state mt-3">
+      <span class="emoji">🌤️</span>
+      <p class="font-bold text-deep" data-i18n="off.empty_title">No hotspots right now.</p>
+      <p class="text-sm mt-1" data-i18n="off.empty_text">Load the demo data to see how the dashboard works, or wait for more resident reports.</p>
+      <button class="btn-secondary mt-4" type="button" id="demo-load" data-i18n="demo.load">Load demo data</button>
+    </div>
+    {% endif %}
+
+    <div class="grid gap-4 mt-4">
+      {% for h in hotspots %}
+      <article class="glass-panel p-5 sm:p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="flex gap-4 min-w-0">
+            <div class="rank-dot" aria-hidden="true">{{ loop.index }}</div>
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="badge {% if h.severity in ['CRITICAL','HIGH'] %}badge-red{% elif h.severity == 'MEDIUM' %}badge-amber{% elif h.severity == 'LOW' %}badge-blue{% else %}badge-green{% endif %}">
+                  <span aria-hidden="true">{% if h.severity in ['CRITICAL','HIGH'] %}✕{% elif h.severity == 'MEDIUM' %}!{% else %}✓{% endif %}</span>
+                  <span data-i18n="severity.{{ h.severity|lower }}">{{ h.severity }}</span>
+                </span>
+                <span class="badge badge-ghost">{{ h.ward }}</span>
+                <span class="badge badge-ghost">{{ h.zone }}</span>
+                <span class="badge badge-blue" data-i18n="off.lab">needs lab confirmation</span>
+                <span class="badge badge-ghost"><span data-i18n="off.reports_n">{{ h.report_count }}</span></span>
+              </div>
+              <h3 class="text-lg font-extrabold tracking-tight text-deep mt-2" data-i18n="f.{{ h.code }}.title">{{ h.code }}</h3>
+              <p class="text-sm text-ink/75 mt-1" data-i18n="f.{{ h.code }}.desc">…</p>
+              <p class="text-xs text-ink/60 mt-2">
+                <span data-i18n="off.first_seen">First seen</span>: {{ h.first_seen_str }} ·
+                <span data-i18n="off.active">active for</span> {{ h.days_active }} <span data-i18n="off.days">day(s)</span> ·
+                <span data-i18n="off.last_seen">latest report</span>: {{ h.last_seen_str }}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end gap-2 no-print">
+            <label class="text-[11px] font-bold uppercase tracking-widest text-aqua" for="status-{{ loop.index }}" data-i18n="table.status">Status</label>
+            <select class="select !w-auto !text-sm !py-2" id="status-{{ loop.index }}"
+                    data-status-ward="{{ h.ward }}" data-status-code="{{ h.code }}">
+              {% for s in statuses %}
+              <option value="{{ s }}" {% if s == h.status %}selected{% endif %} data-i18n="status.{{ s|lower|replace(' ','_') }}">{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2 mt-4">
+          <div class="glass-inset p-4">
+            <p class="text-[11px] font-bold uppercase tracking-widest text-aqua mb-1" data-i18n="result.first_action">First action</p>
+            <p class="text-sm font-semibold text-deep" data-i18n="f.{{ h.code }}.action">…</p>
+            <p class="text-[11px] font-bold uppercase tracking-widest text-aqua mt-3 mb-1" data-i18n="off.quick">Quick low-cost actions first</p>
+            <ul class="text-sm text-ink/75 space-y-1">
+              {% for a in h.quick_actions %}<li>• <span data-i18n="{{ a }}">…</span></li>{% endfor %}
+            </ul>
+            {% if h.capital_works %}
+            <p class="text-[11px] font-bold uppercase tracking-widest text-aqua mt-3 mb-1" data-i18n="off.capital">Then capital works</p>
+            <ul class="text-sm text-ink/75 space-y-1">
+              {% for c in h.capital_works %}<li>• <span data-i18n="{{ c }}">…</span></li>{% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+          <div class="glass-inset p-4">
+            <p class="text-[11px] font-bold uppercase tracking-widest text-aqua mb-1" data-i18n="result.responsible">Responsible department</p>
+            {% set c = CONTACTS.get(h.department) %}
+            {% if c %}
+            <p class="text-sm font-bold text-deep">{{ c.dept }}</p>
+            <p class="text-xs text-ink/70 mt-1">{{ c.blurb }}</p>
+            <div class="flex flex-wrap gap-2 mt-3">
+              {% if c.phone %}<a class="btn-call" href="tel:{{ c.phone|replace('-','') }}"><span aria-hidden="true">📞</span> {{ c.phone }}</a>{% endif %}
+              {% if c.email %}<a class="btn-mail" href="mailto:{{ c.email }}"><span aria-hidden="true">✉️</span> {{ c.email }}</a>{% endif %}
+            </div>
+            {% if c.to_confirm %}<span class="badge badge-amber mt-2" data-i18n="contacts.to_confirm">to confirm</span>{% endif %}
+            {% endif %}
+            <a class="text-sm font-bold text-aqua underline decoration-teal2/50 underline-offset-4 mt-3 inline-block"
+               href="{{ url_for('map_page') }}?ward={{ h.ward|urlencode }}&zone={{ h.zone|urlencode }}" data-i18n="off.view_map">View on map</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Recent reports -->
+  <section class="glass-panel p-5 sm:p-6" aria-labelledby="recent-title">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 id="recent-title" class="text-xl font-extrabold tracking-tight text-deep" data-i18n="off.recent">Recent reports</h2>
+      <div class="flex flex-wrap gap-2">
+        <button class="btn-secondary btn-sm" type="button" id="demo-load-2" data-i18n="demo.load">Load demo data</button>
+        <button class="btn-quiet btn-sm" type="button" id="demo-remove" data-i18n="demo.remove">Remove demo data</button>
+      </div>
+    </div>
+
+    <div class="scroll-x mt-4">
+      <table class="table-glass">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th data-i18n="filter.zone">Zone</th>
+            <th data-i18n="check.ward">Ward</th>
+            <th>pH</th><th data-i18n="term.turbidity">Turbidity</th><th data-i18n="term.tds">TDS</th><th data-i18n="term.dissolved_oxygen">DO</th>
+            <th data-i18n="table.worst">Severity</th>
+            <th data-i18n="table.findings">Findings</th>
+            <th data-i18n="table.when">When</th>
+            <th class="no-print" data-i18n="table.status">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recent %}
+          <tr>
+            <td>{{ r.id }}</td>
+            <td>{{ r.zone }}</td>
+            <td>{{ r.ward }}</td>
+            <td>{{ r.ph }}</td>
+            <td>{{ r.turbidity }}</td>
+            <td>{{ r.tds }}</td>
+            <td>{{ r.dissolved_oxygen if r.dissolved_oxygen is not none else '—' }}</td>
+            <td><span class="badge {% if r.severity in ['CRITICAL','HIGH'] %}badge-red{% elif r.severity == 'MEDIUM' %}badge-amber{% elif r.severity == 'LOW' %}badge-blue{% else %}badge-green{% endif %}">{{ r.severity }}</span></td>
+            <td class="text-xs">
+              {% for f in r.diagnosis.get('findings', []) %}
+                <span class="badge badge-ghost mb-1" data-i18n="f.{{ f.code }}.title">{{ f.code }}</span>
+              {% endfor %}
+              {% if r.is_demo %}<span class="badge badge-amber" data-i18n="demo.badge">Demo data</span>{% endif %}
+            </td>
+            <td class="text-xs">{{ r.created_at|dtshort }}</td>
+            <td class="no-print">
+              <select class="select !w-auto !text-xs !py-1.5" data-status-id="{{ r.id }}">
+                {% for s in statuses %}
+                <option value="{{ s }}" {% if s == r.status %}selected{% endif %} data-i18n="status.{{ s|lower|replace(' ','_') }}">{{ s }}</option>
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-ink/60 mt-3" data-i18n="off.privacy">Residents see ward-level locations only. No names, phone numbers or email addresses are stored.</p>
+  </section>
+</div>
+
+<style>
+  .rank-dot { flex: none; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 1rem;
+    color: #fff; font-weight: 800; font-size: 1.05rem; background: linear-gradient(135deg, #0ea5e9, #0d9488);
+    border: 1px solid rgba(255,255,255,.85); }
+</style>
+{% endblock %}

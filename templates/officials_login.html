@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Officials{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+  <div class="glass-panel p-6 sm:p-8">
+    <span class="badge badge-blue" data-i18n="off.badge">VCMC officials only</span>
+    <h1 class="text-2xl font-extrabold tracking-tight text-deep mt-3" data-i18n="off.login_title">Officials dashboard</h1>
+    <p class="text-sm text-ink/70 mt-2" data-i18n="off.login_sub">Sign in with the shared officials password to see ranked hotspots, set the status of each issue and export the weekly priority list.</p>
+
+    <form method="post" action="{{ url_for('officials_login') }}" class="mt-6 grid gap-4">
+      <div>
+        <label class="field-label" for="password" data-i18n="off.password">Password</label>
+        <input class="input" type="password" id="password" name="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn-primary" type="submit" data-i18n="off.signin">Sign in</button>
+    </form>
+
+    <p class="text-xs text-ink/55 mt-5" data-i18n="off.login_note">Residents never need a password — anyone can report a water problem without logging in.</p>
+    <a class="text-sm font-bold text-aqua underline decoration-teal2/50 underline-offset-4 mt-3 inline-block" href="{{ url_for('home') }}" data-i18n="nav.home">Home</a>
+  </div>
+</div>
+{% endblock %}

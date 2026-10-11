@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}Your result{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto grid gap-6">
+
+  {% if reading.ill %}
+  <div class="glass-panel p-5 flex flex-wrap items-center gap-4 ring-1 ring-rose-300/70" role="alert">
+    <span class="status-icon !w-12 !h-12" style="background:linear-gradient(135deg,#f43f5e,#e11d48)" aria-hidden="true">✚</span>
+    <div class="flex-1 min-w-[12rem]">
+      <p class="font-extrabold text-deep" data-i18n="result.ill_title">Please see a doctor or visit the nearest hospital</p>
+      <p class="text-sm text-ink/70" data-i18n="result.ill_text">Someone became ill after drinking this water. Tell the doctor the water may be the cause, and keep this result to show them.</p>
+    </div>
+    <a class="btn-call" href="tel:108"><span aria-hidden="true">🚑</span> 108</a>
+  </div>
+  {% endif %}
+
+  <!-- Big status card -->
+  <section class="status-card status-{{ status }}" aria-labelledby="result-status">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <div class="flex flex-wrap items-center gap-2 mb-2">
+          <span class="badge badge-ghost">{{ reading.ward }}</span>
+          <span class="badge badge-ghost">{{ reading.zone }}</span>
+          <span class="badge badge-ghost">{{ reading.created_at|dt }}</span>
+          {% if reading.is_demo %}<span class="badge badge-amber" data-i18n="demo.badge">Demo data</span>{% endif %}
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="status-icon" aria-hidden="true">
+            {% if status == 'OK' %}✓{% elif status == 'WATCH' %}!{% else %}✕{% endif %}
+          </span>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-ink/60" data-i18n="result.your_result">Your result</p>
+            <h1 id="result-status" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-deep" data-i18n="status.{{ status|lower }}">{{ status }}</h1>
+          </div>
+        </div>
+        <p class="text-sm text-ink/75 mt-3 max-w-lg" data-i18n="result.summary.{{ status|lower }}">
+          {% if status == 'OK' %}Nothing in these readings looks out of range.
+          {% elif status == 'WATCH' %}Something needs watching. Take a first action today.
+          {% else %}This water needs attention. Please act now and report it.
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="glass-inset p-4 min-w-[11rem]">
+        <p class="text-xs font-bold uppercase tracking-widest text-aqua mb-2" data-i18n="result.status_track">Report status</p>
+        <p class="font-extrabold text-deep flex items-center gap-2">
+          <span class="status-dot {% if hotspot_status == 'Resolved' %}dot-green{% elif hotspot_status == 'In progress' %}dot-amber{% else %}dot-grey{% endif %}"></span>
+          <span data-i18n="status.{{ hotspot_status|lower|replace(' ','_') }}">{{ hotspot_status }}</span>
+        </p>
+        <p class="text-xs text-ink/60 mt-1"><span data-i18n="result.report_id">Report ID</span>: #{{ reading.id }}</p>
+      </div>
+    </div>
+
+    <!-- readings -->
+    <div class="grid gap-3 sm:grid-cols-4 mt-6">
+      {% set gauges = [
+        ('ph', reading.ph, 'pH', diagnosis.gauges.get('ph')),
+        ('turbidity', reading.turbidity, 'NTU', diagnosis.gauges.get('turbidity')),
+        ('tds', reading.tds, 'mg/L', diagnosis.gauges.get('tds')),
+        ('dissolved_oxygen', reading.dissolved_oxygen, 'mg/L', diagnosis.gauges.get('dissolved_oxygen'))
+      ] %}
+      {% for key, value, unit, state in gauges %}
+      <div class="glass-inset p-3">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-aqua"><span class="term !border-0 !text-aqua" tabindex="0" data-i18n="term.{{ key }}" data-tip-key="tip.{{ key }}">{{ key }}</span></p>
+        <p class="text-xl font-extrabold text-deep mt-1">
+          {% if value is not none %}{{ value }} <span class="text-xs font-semibold text-ink/60">{{ unit }}</span>{% else %}<span class="text-sm text-ink/50" data-i18n="result.not_tested">not tested</span>{% endif %}
+        </p>
+        <span class="state-pill state-{{ state or 'none' }} mt-2">
+          {% if state == 'ok' %}<span aria-hidden="true">✓</span> <span data-i18n="gauge.ok">Acceptable</span>
+          {% elif state == 'watch' %}<span aria-hidden="true">!</span> <span data-i18n="gauge.watch">Watch</span>
+          {% elif state == 'unsafe' %}<span aria-hidden="true">✕</span> <span data-i18n="gauge.unsafe">Unsafe</span>
+          {% else %}<span aria-hidden="true">–</span> <span data-i18n="gauge.none">Not tested</span>{% endif %}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if status != 'OK' %}
+    <div class="mt-4 flex flex-wrap items-center gap-2">
+      <span class="badge badge-blue" data-i18n="result.lab_tag">Needs lab confirmation</span>
+      {% if reading.reports %}<span class="badge badge-ghost"><span data-i18n="result.you_noticed">You noticed</span>: {{ reading.reports|join(', ')|replace('_',' ') }}</span>{% endif %}
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- Disclaimer -->
+  <div class="glass-panel p-5 ring-1 ring-sky-300/70 flex gap-3 items-start" role="note">
+    <span class="text-xl" aria-hidden="true">⚠️</span>
+    <p class="text-sm font-semibold text-deep" data-i18n="result.disclaimer">
+      This is indicative. It does NOT prove water is safe to drink. Bacteria, nitrate, fluoride, arsenic and heavy metals are not tested here. Please confirm with a lab test.
+    </p>
+  </div>
+
+  <!-- Findings -->
+  <section aria-labelledby="findings-title">
+    <h2 id="findings-title" class="text-xl font-extrabold tracking-tight text-deep mb-3" data-i18n="result.findings">What we found</h2>
+    <div class="grid gap-4">
+      {% for f in findings %}
+      {% set contact = CONTACTS.get(f.department) %}
+      <article class="sev-card sev-{{ f.severity }}">
+        <div class="flex flex-wrap items-center gap-2 mb-2">
+          <span class="badge {% if f.severity == 'CRITICAL' or f.severity == 'HIGH' %}badge-red{% elif f.severity == 'MEDIUM' %}badge-amber{% elif f.severity == 'LOW' %}badge-blue{% else %}badge-green{% endif %}">
+            <span aria-hidden="true">{% if f.severity == 'CRITICAL' or f.severity == 'HIGH' %}✕{% elif f.severity == 'MEDIUM' %}!{% elif f.severity == 'LOW' %}〜{% else %}✓{% endif %}</span>
+            <span data-i18n="severity.{{ f.severity|lower }}">{{ f.severity }}</span>
+          </span>
+          <h3 class="font-extrabold text-deep text-lg tracking-tight" data-i18n="f.{{ f.code }}.title">{{ f.code }}</h3>
+        </div>
+
+        <p class="text-sm text-ink/80" data-i18n="f.{{ f.code }}.desc">…</p>
+
+        <div class="mt-3 glass-inset p-3">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-aqua mb-1" data-i18n="result.first_action">First action</p>
+          <p class="text-sm font-semibold text-deep" data-i18n="f.{{ f.code }}.action">…</p>
+        </div>
+
+        {% if contact %}
+        <div class="mt-3 flex flex-wrap items-center gap-3 justify-between bg-white/70 border border-white/95 rounded-2xl p-3">
+          <div class="min-w-[12rem]">
+            <p class="text-[11px] font-bold uppercase tracking-widest text-aqua" data-i18n="result.responsible">Responsible department</p>
+            <p class="font-bold text-[.95rem] text-deep">{{ contact.dept }}</p>
+            <p class="text-xs text-ink/65">{{ contact.blurb }}</p>
+            {% if contact.to_confirm %}<span class="badge badge-amber mt-1" data-i18n="contacts.to_confirm">to confirm</span>{% endif %}
+          </div>
+          <div class="flex flex-wrap gap-2">
+            {% if contact.phone %}<a class="btn-call" href="tel:{{ contact.phone|replace('-','') }}"><span aria-hidden="true">📞</span> {{ contact.phone }}</a>{% endif %}
+            {% if contact.email %}
+              <a class="btn-mail" href="mailto:{{ contact.email }}?subject={{ ('Water problem - '|urlencode) ~ (reading.ward|urlencode) }}"><span aria-hidden="true">✉️</span> <span data-i18n="result.email_them">Email</span></a>
+            {% else %}
+              <a class="btn-call" href="tel:{{ CONTACTS[PRIMARY_CONTACT].phone }}"><span aria-hidden="true">☎️</span> <span data-i18n="result.call_grievance">VCMC grievance line</span></a>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% for also_key in f.also %}
+          {% set also = CONTACTS.get(also_key) %}
+          {% if also %}
+          <p class="text-xs text-ink/65 mt-2">
+            <span data-i18n="result.also_contact">Also relevant</span>: {{ also.dept }}
+            {% if also.phone %} · <a class="underline decoration-teal2/50 underline-offset-4" href="tel:{{ also.phone|replace('-','') }}">{{ also.phone }}</a>{% endif %}
+          </p>
+          {% endif %}
+        {% endfor %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Report this to VCMC -->
+  {% if status == 'UNSAFE' %}
+  {% set primary = CONTACTS.get(findings[0].department) if findings else None %}
+  {% set grievance = CONTACTS[PRIMARY_CONTACT] %}
+  <section class="glass-panel p-6 ring-1 ring-rose-200/80" aria-labelledby="report-title">
+    <div class="flex items-center gap-3">
+      <span class="status-icon" aria-hidden="true">📨</span>
+      <div>
+        <h2 id="report-title" class="text-xl font-extrabold tracking-tight text-deep" data-i18n="result.report_cta">Report this to VCMC</h2>
+        <p class="text-sm text-ink/70" data-i18n="result.report_sub">Send your readings, diagnosis, area and time in one message. It takes a minute.</p>
+      </div>
+    </div>
+
+    <div class="grid gap-3 sm:grid-cols-2 mt-5">
+      <div class="glass-inset p-4">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-aqua">{{ grievance.dept }}</p>
+        <p class="text-sm text-ink/70 mt-1">{{ grievance.blurb }}</p>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <a class="btn-call" href="tel:{{ grievance.phone }}"><span aria-hidden="true">📞</span> {{ grievance.phone }}</a>
+          <a class="btn-mail" id="email-link" href="mailto:{{ grievance.email }}"><span aria-hidden="true">✉️</span> <span data-i18n="result.send_email">Send email</span></a>
+        </div>
+      </div>
+      <div class="glass-inset p-4">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-aqua">
+          {% if primary and primary.key != grievance.key %}{{ primary.dept }}{% else %}{{ CONTACTS['commissioner'].dept }}{% endif %}
+        </p>
+        <p class="text-sm text-ink/70 mt-1">
+          {% if primary and primary.key != grievance.key %}{{ primary.blurb }}{% else %}{{ CONTACTS['commissioner'].blurb }}{% endif %}
+        </p>
+        <div class="flex flex-wrap gap-2 mt-3">
+          {% set second = primary if primary and primary.key != grievance.key else CONTACTS['commissioner'] %}
+          {% if second.phone %}<a class="btn-call" href="tel:{{ second.phone|replace('-','') }}"><span aria-hidden="true">📞</span> {{ second.phone }}</a>{% endif %}
+          {% if second.email %}<a class="btn-mail" href="mailto:{{ second.email }}"><span aria-hidden="true">✉️</span> {{ second.email }}</a>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <div class="flex items-center justify-between gap-2">
+        <label class="field-label !mb-0" for="report-message" data-i18n="result.message">Pre-filled message</label>
+        <button type="button" class="btn-secondary btn-sm" id="copy-message" data-i18n="result.copy">Copy</button>
+      </div>
+      <textarea class="textarea mt-2" id="report-message" rows="9" readonly>{{ report_message }}</textarea>
+      <p class="text-xs text-ink/60 mt-1" data-i18n="result.message_hint">Paste it into your email or your message to VCMC.</p>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- What next -->
+  <section class="glass-panel p-6">
+    <h2 class="text-lg font-extrabold tracking-tight text-deep" data-i18n="result.next">What next</h2>
+    <div class="grid gap-3 sm:grid-cols-3 mt-4">
+      <a class="link-row" href="{{ url_for('map_page') }}"><span aria-hidden="true">🗺️</span><span data-i18n="result.next_map">See this ward on the community map</span></a>
+      <a class="link-row" href="{{ url_for('contacts_page') }}"><span aria-hidden="true">📞</span><span data-i18n="next_contacts">All contacts and helplines</span></a>
+      <a class="link-row" href="{{ url_for('check') }}"><span aria-hidden="true">🧪</span><span data-i18n="result.next_check">Check another sample</span></a>
+    </div>
+    <p class="text-xs text-ink/55 mt-4"><span data-i18n="contacts.last_checked">Last checked</span>: {{ LAST_CHECKED }} · <span data-i18n="footer.privacy">We store your ward only — never your exact location.</span></p>
+  </section>
+</div>
+
+<style>
+  .link-row { display: flex; gap: .6rem; align-items: center; padding: .8rem .95rem; border-radius: 1rem;
+    background: rgba(255,255,255,.68); border: 1px solid rgba(255,255,255,.95); font-size: .95rem;
+    font-weight: 700; color: #06283f; transition: transform .18s ease, background .2s ease; }
+  .link-row:hover { transform: translateY(-2px); background: #fff; }
+</style>
+
+<script>
+  window.AQUATRACE_RESULT = {{ {
+    "ward": reading.ward, "zone": reading.zone, "time": reading.created_at|dt,
+    "ph": reading.ph, "turbidity": reading.turbidity, "tds": reading.tds,
+    "do": reading.dissolved_oxygen, "status": status,
+    "reports": reading.reports, "note": reading.note,
+    "findings": findings|map(attribute='code')|list,
+    "id": reading.id
+  }|tojson }};
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/result.js') }}"></script>
+{% endblock %}

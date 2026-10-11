@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Community map{% endblock %}
+
+{% block head %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="grid gap-6">
+  <div class="glass-panel p-5 sm:p-7">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-deep" data-i18n="map.title">Community map of Vellore</h1>
+        <p class="text-sm text-ink/70 mt-1 max-w-2xl" data-i18n="map.sub">Every pin is a ward, coloured by the worst report there. Tap a pin to see readings, the diagnosis and when it was reported.</p>
+        <p class="text-xs text-ink/55 mt-1" data-i18n="map.privacy">Pins show the ward only — never a resident's exact location.</p>
+      </div>
+      <span class="badge badge-teal" data-i18n="home.serving">Serving Vellore, starting with Katpadi</span>
+    </div>
+
+    <!-- filters -->
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5 mt-5">
+      <div>
+        <label class="field-label" for="f-zone" data-i18n="filter.zone">Zone</label>
+        <select class="select" id="f-zone">
+          <option value="" data-i18n="filter.all_zones">All zones</option>
+          {% for z in ZONES %}<option value="{{ z }}">{{ z }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="field-label" for="f-severity" data-i18n="filter.severity">Severity</label>
+        <select class="select" id="f-severity">
+          <option value="" data-i18n="filter.all_severities">All severities</option>
+          <option value="CRITICAL">CRITICAL</option>
+          <option value="HIGH">HIGH</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="LOW">LOW</option>
+          <option value="NONE">NONE</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label" for="f-problem" data-i18n="filter.problem">Problem type</label>
+        <select class="select" id="f-problem">
+          <option value="" data-i18n="filter.all_problems">All problems</option>
+          {% for chip in ['salty_taste','bad_smell','cloudy_water','strange_colour','no_supply','low_pressure','leak'] %}
+          <option value="{{ chip }}" data-i18n="report.{{ chip }}">{{ chip }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="field-label" for="f-from" data-i18n="filter.from">From date</label>
+        <input class="input" type="date" id="f-from">
+      </div>
+      <div>
+        <label class="field-label" for="f-to" data-i18n="filter.to">To date</label>
+        <input class="input" type="date" id="f-to">
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3 mt-4">
+      <button type="button" class="btn-secondary btn-sm" id="f-reset" data-i18n="filter.reset">Reset filters</button>
+      <span class="text-sm font-semibold text-ink/70" id="map-count"></span>
+    </div>
+
+    <!-- legend: colour is never the only signal -->
+    <div class="flex flex-wrap gap-2 mt-4" role="list" aria-label="Severity legend">
+      <span class="badge badge-red" role="listitem"><span aria-hidden="true">✕</span> <span data-i18n="severity.critical">CRITICAL</span></span>
+      <span class="badge badge-red" role="listitem"><span aria-hidden="true">✕</span> <span data-i18n="severity.high">HIGH</span></span>
+      <span class="badge badge-amber" role="listitem"><span aria-hidden="true">!</span> <span data-i18n="severity.medium">MEDIUM</span></span>
+      <span class="badge badge-blue" role="listitem"><span aria-hidden="true">〜</span> <span data-i18n="severity.low">LOW</span></span>
+      <span class="badge badge-green" role="listitem"><span aria-hidden="true">✓</span> <span data-i18n="severity.none">NONE</span></span>
+    </div>
+  </div>
+
+  <div id="map" class="h-[420px] sm:h-[520px] glass-panel overflow-hidden" aria-label="Map of Vellore"></div>
+
+  <div class="glass-panel p-5 sm:p-7">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <h2 class="text-lg font-extrabold tracking-tight text-deep" data-i18n="map.list_title">Ward list</h2>
+      <span class="text-xs text-ink/60" data-i18n="map.list_hint">The same information as the map, without needing a map.</span>
+    </div>
+    <div id="map-loading" class="empty-state"><span class="emoji">💧</span><span data-i18n="common.loading">Loading…</span></div>
+    <div id="map-empty" class="empty-state hidden">
+      <span class="emoji">🌤️</span>
+      <p class="font-bold text-deep" data-i18n="map.empty_title">No reports match these filters.</p>
+      <p class="text-sm mt-1" data-i18n="map.empty_text">Try clearing a filter — or be the first to check your water in this area.</p>
+      <a class="btn-primary mt-4 inline-flex" href="{{ url_for('check') }}" data-i18n="home.cta">Check my water</a>
+    </div>
+    <div class="scroll-x mt-4">
+      <table class="table-glass" id="ward-table" hidden>
+        <thead>
+          <tr>
+            <th data-i18n="filter.zone">Zone</th>
+            <th data-i18n="check.ward">Ward</th>
+            <th data-i18n="table.reports">Reports</th>
+            <th data-i18n="table.worst">Worst severity</th>
+            <th data-i18n="table.latest">Latest</th>
+            <th data-i18n="table.findings">Findings</th>
+            <th data-i18n="table.status">Status</th>
+          </tr>
+        </thead>
+        <tbody id="ward-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Weekly priority list{% endblock %}
+
+{% block content %}
+<div class="grid gap-6">
+  <div class="glass-panel p-6">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <span class="badge badge-blue" data-i18n="off.print_badge">Weekly priority list</span>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-deep mt-2" data-i18n="off.print_title">Vellore water problems — this week</h1>
+        <p class="text-sm text-ink/70 mt-1">
+          <span data-i18n="off.print_week">Week starting</span>: {{ week_start }} ·
+          <span data-i18n="contacts.last_checked">Last checked</span>: {{ LAST_CHECKED }}
+        </p>
+      </div>
+      <div class="flex gap-2 no-print">
+        <button class="btn-primary btn-sm" type="button" onclick="window.print()" data-i18n="off.print_action">Print or save as PDF</button>
+        <a class="btn-secondary btn-sm" href="{{ url_for('officials_dashboard') }}" data-i18n="off.back">Back to dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass-panel p-6">
+    {% if not hotspots %}
+      <div class="empty-state">
+        <span class="emoji">🌤️</span>
+        <p class="font-bold text-deep" data-i18n="off.empty_title">No hotspots right now.</p>
+      </div>
+    {% else %}
+    <div class="scroll-x">
+      <table class="table-glass">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th data-i18n="filter.zone">Zone</th>
+            <th data-i18n="check.ward">Ward</th>
+            <th data-i18n="table.findings">Diagnosis</th>
+            <th data-i18n="table.worst">Severity</th>
+            <th data-i18n="table.reports">Reports</th>
+            <th data-i18n="off.first_seen">First seen</th>
+            <th data-i18n="result.first_action">First action</th>
+            <th data-i18n="result.responsible">Responsible department</th>
+            <th data-i18n="table.status">Status</th>
+            <th data-i18n="off.lab">Lab</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in hotspots %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ h.zone }}</td>
+            <td>{{ h.ward }}</td>
+            <td data-i18n="f.{{ h.code }}.title">{{ h.code }}</td>
+            <td>{{ h.severity }}</td>
+            <td>{{ h.report_count }}</td>
+            <td>{{ h.first_seen_str }}</td>
+            <td data-i18n="f.{{ h.code }}.action">…</td>
+            <td>{{ CONTACTS.get(h.department).dept if CONTACTS.get(h.department) else h.department }}</td>
+            <td>{{ h.status }}</td>
+            <td>YES</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+    <p class="text-xs text-ink/60 mt-4" data-i18n="off.print_note">Quick low-cost actions (flushing, tank cleaning, chlorination, advisories) are listed before capital works on the dashboard. Every hotspot needs lab confirmation before any long-term work is approved.</p>
+  </div>
+</div>
+{% endblock %}

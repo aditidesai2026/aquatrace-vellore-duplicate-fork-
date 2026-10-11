@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Contact and Helpline{% endblock %}
+
+{% block content %}
+<div class="grid gap-6">
+  <div class="glass-panel p-6 sm:p-8">
+    <span class="badge badge-teal"><span data-i18n="contacts.last_checked">Last checked</span>: {{ LAST_CHECKED }}</span>
+    <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-deep mt-3" data-i18n="contacts.title">Contact and helpline</h1>
+    <p class="text-sm sm:text-base text-ink/75 mt-2 max-w-2xl" data-i18n="contacts.sub">Every number below is a tap-to-call button and every email is a tap-to-email. If you are not sure who to call, start with the grievance line.</p>
+    <div class="flex flex-wrap gap-3 mt-5">
+      <a class="btn-primary" href="tel:{{ CONTACTS[PRIMARY_CONTACT].phone }}"><span aria-hidden="true">📞</span> <span data-i18n="contacts.call_grievance">Call the VCMC grievance line</span></a>
+      <a class="btn-secondary" href="mailto:{{ CONTACTS[PRIMARY_CONTACT].email }}"><span aria-hidden="true">✉️</span> <span data-i18n="contacts.email_grievance">Email your complaint</span></a>
+    </div>
+  </div>
+
+  <!-- Who does what -->
+  <section class="glass-panel p-6 sm:p-8">
+    <h2 class="text-xl font-extrabold tracking-tight text-deep" data-i18n="contacts.who">Who deals with what</h2>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mt-4">
+      <div class="glass-inset p-4"><p class="font-bold text-deep text-[.95rem]" data-i18n="contacts.who1_t">Water supply, pressure, leaks, rusty pipes</p><p class="text-sm text-ink/70 mt-1">{{ CONTACTS['engineer'].dept }}</p></div>
+      <div class="glass-inset p-4"><p class="font-bold text-deep text-[.95rem]" data-i18n="contacts.who2_t">Sewage smell, contamination, illness</p><p class="text-sm text-ink/70 mt-1">{{ CONTACTS['health'].dept }}</p></div>
+      <div class="glass-inset p-4"><p class="font-bold text-deep text-[.95rem]" data-i18n="contacts.who3_t">Suspected factory or industrial discharge</p><p class="text-sm text-ink/70 mt-1">{{ CONTACTS['tpcb'].dept }}</p></div>
+      <div class="glass-inset p-4"><p class="font-bold text-deep text-[.95rem]" data-i18n="contacts.who4_t">Road work and construction damage</p><p class="text-sm text-ink/70 mt-1">{{ CONTACTS['works'].dept }}</p></div>
+      <div class="glass-inset p-4"><p class="font-bold text-deep text-[.95rem]" data-i18n="contacts.who5_t">Anything else, or you are not sure</p><p class="text-sm text-ink/70 mt-1">{{ CONTACTS['grievance'].dept }}</p></div>
+      <div class="glass-inset p-4"><p class="font-bold text-deep text-[.95rem]" data-i18n="contacts.who6_t">Regional water supply for Katpadi</p><p class="text-sm text-ink/70 mt-1">{{ CONTACTS['twad'].dept }}</p></div>
+    </div>
+  </section>
+
+  <!-- Full list -->
+  <section class="grid gap-5 md:grid-cols-2">
+    {% for key, c in CONTACTS.items() %}
+    <article class="glass-panel p-6">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-widest text-aqua" data-i18n="c.{{ key }}.dept">{{ c.dept }}</p>
+          <h3 class="text-lg font-extrabold tracking-tight text-deep mt-1" data-i18n="c.{{ key }}.blurb">{{ c.blurb }}</h3>
+        </div>
+        {% if c.to_confirm %}<span class="badge badge-amber" data-i18n="contacts.to_confirm">to confirm</span>{% endif %}
+      </div>
+
+      <dl class="mt-3">
+        <div class="kv"><dt data-i18n="contacts.person">Contact</dt><dd>{{ c.person }}</dd></div>
+        <div class="kv"><dt data-i18n="contacts.address">Address</dt><dd class="max-w-[60%]">{{ c.address }}</dd></div>
+        {% if c.website %}<div class="kv"><dt data-i18n="contacts.website">Website</dt><dd><a class="underline decoration-teal2/50 underline-offset-4" href="https://{{ c.website }}" rel="noopener" target="_blank">{{ c.website }}</a></dd></div>{% endif %}
+      </dl>
+
+      <div class="flex flex-wrap gap-2 mt-4">
+        {% if c.phone %}
+          <a class="btn-call" href="tel:{{ c.phone|replace('-','') }}"><span aria-hidden="true">📞</span> {{ c.phone }}</a>
+        {% endif %}
+        {% if c.email %}
+          <a class="btn-mail" href="mailto:{{ c.email }}"><span aria-hidden="true">✉️</span> {{ c.email }}</a>
+        {% endif %}
+        {% if not c.phone and not c.email %}
+          <span class="badge badge-ghost" data-i18n="contacts.pending">Number to confirm — not published yet</span>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+
+  <section class="glass-panel p-6 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="font-bold text-deep" data-i18n="contacts.tip_title">Tip: report from your result screen</p>
+      <p class="text-sm text-ink/70 mt-1" data-i18n="contacts.tip_text">When your result is Unsafe, AquaTrace writes the message for you — area, readings, diagnosis and time — so you can copy it straight into an email.</p>
+    </div>
+    <a class="btn-primary" href="{{ url_for('check') }}" data-i18n="home.cta">Check my water</a>
+  </section>
+</div>
+{% endblock %}

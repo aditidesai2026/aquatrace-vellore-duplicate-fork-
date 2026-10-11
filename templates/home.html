@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section class="grid gap-6 lg:grid-cols-[1.15fr_.85fr] items-start">
+  <!-- Hero -->
+  <div class="glass-panel p-6 sm:p-9">
+    <div class="flex flex-wrap items-center gap-2 mb-5">
+      <span class="badge badge-teal" data-i18n="home.serving">Serving Vellore, starting with Katpadi</span>
+      <span class="badge badge-blue" data-i18n="home.no_hardware">No sensors — people type what they measure</span>
+    </div>
+
+    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.05] text-deep">
+      <span data-i18n="home.h1a">Know what is in your water,</span><br>
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky2 via-aqua to-teal2" data-i18n="home.h1b">and who to tell about it.</span>
+    </h1>
+
+    <p class="mt-4 text-base sm:text-lg text-ink/75 max-w-xl" data-i18n="home.pitch">
+      AquaTrace helps residents of Vellore check their tap water in a few taps, see what is probably wrong, and report it to the right VCMC department.
+    </p>
+
+    <div class="mt-7 flex flex-col sm:flex-row gap-3">
+      <a href="{{ url_for('check') }}" class="btn-primary btn-lg flex-1" data-i18n="home.cta">Check my water</a>
+      <a href="{{ url_for('map_page') }}" class="btn-secondary btn-lg flex-1" data-i18n="home.cta_map">See the community map</a>
+    </div>
+
+    <div class="mt-6 grid gap-3 sm:grid-cols-3">
+      <div class="glass-inset p-3.5">
+        <p class="text-xs font-bold uppercase tracking-widest text-aqua" data-i18n="home.stat_today">Readings today</p>
+        <p class="stat-num mt-1" id="stat-today">—</p>
+      </div>
+      <div class="glass-inset p-3.5">
+        <p class="text-xs font-bold uppercase tracking-widest text-aqua" data-i18n="home.stat_areas">Areas with problems</p>
+        <p class="stat-num mt-1" id="stat-problem-wards">—</p>
+      </div>
+      <div class="glass-inset p-3.5">
+        <p class="text-xs font-bold uppercase tracking-widest text-aqua" data-i18n="home.stat_total">Total readings</p>
+        <p class="stat-num mt-1" id="stat-total">—</p>
+      </div>
+    </div>
+    <p id="stats-loading" class="text-sm text-ink/60 mt-3" data-i18n="home.loading">Loading community stats…</p>
+    <div id="stats-empty" class="hidden mt-3">
+      <div class="glass-inset p-4 text-sm">
+        <p class="font-bold text-deep" data-i18n="home.empty_title">No readings yet in Vellore.</p>
+        <p class="text-ink/70 mt-1" data-i18n="home.empty_text">Be the first to check your water, or load the clearly marked demo data to explore the map and charts.</p>
+      </div>
+    </div>
+    <p id="stats-zones" class="text-xs text-ink/55 mt-3"></p>
+  </div>
+
+  <!-- Side panel -->
+  <div class="grid gap-6">
+    <div class="glass-panel p-6">
+      <h2 class="text-lg font-extrabold tracking-tight text-deep" data-i18n="home.how_title">How it works</h2>
+      <ol class="mt-4 space-y-4">
+        <li class="flex gap-3">
+          <span class="num-dot">1</span>
+          <div>
+            <p class="font-bold text-[.95rem]" data-i18n="home.step1_t">Type your readings</p>
+            <p class="text-sm text-ink/70" data-i18n="home.step1_d">pH, turbidity, TDS and (optional) dissolved oxygen from your test kit. One question per screen.</p>
+          </div>
+        </li>
+        <li class="flex gap-3">
+          <span class="num-dot">2</span>
+          <div>
+            <p class="font-bold text-[.95rem]" data-i18n="home.step2_t">See what is probably wrong</p>
+            <p class="text-sm text-ink/70" data-i18n="home.step2_d">AquaTrace checks your numbers against BIS and WHO limits and explains the finding in simple words.</p>
+          </div>
+        </li>
+        <li class="flex gap-3">
+          <span class="num-dot">3</span>
+          <div>
+            <p class="font-bold text-[.95rem]" data-i18n="home.step3_t">Report it to the right person</p>
+            <p class="text-sm text-ink/70" data-i18n="home.step3_d">High or critical results come with a ready-made message and a tap-to-call button for VCMC.</p>
+          </div>
+        </li>
+      </ol>
+      <a href="{{ url_for('check') }}" class="btn-primary w-full mt-6" data-i18n="home.cta">Check my water</a>
+    </div>
+
+    <div class="glass-panel p-6">
+      <h2 class="text-lg font-extrabold tracking-tight text-deep" data-i18n="home.links_title">Explore AquaTrace</h2>
+      <div class="mt-4 grid gap-3">
+        <a class="link-row" href="{{ url_for('map_page') }}">
+          <span aria-hidden="true">🗺️</span>
+          <span><span class="font-bold" data-i18n="nav.map">Community map</span><br><span class="text-sm text-ink/65" data-i18n="home.link_map">Ward-level pins coloured by severity.</span></span>
+        </a>
+        <a class="link-row" href="{{ url_for('charts_page') }}">
+          <span aria-hidden="true">📊</span>
+          <span><span class="font-bold" data-i18n="nav.charts">Charts</span><br><span class="text-sm text-ink/65" data-i18n="home.link_charts">Every reading, grouped by ward or zone.</span></span>
+        </a>
+        <a class="link-row" href="{{ url_for('learn_page') }}">
+          <span aria-hidden="true">📘</span>
+          <span><span class="font-bold" data-i18n="nav.learn">Learn</span><br><span class="text-sm text-ink/65" data-i18n="home.link_learn">What pH, turbidity, TDS and DO mean.</span></span>
+        </a>
+        <a class="link-row" href="{{ url_for('contacts_page') }}">
+          <span aria-hidden="true">📞</span>
+          <span><span class="font-bold" data-i18n="nav.contacts">Contact and helpline</span><br><span class="text-sm text-ink/65" data-i18n="home.link_contacts">VCMC, zone office, TWAD and more.</span></span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Demo data (clearly labelled) -->
+<section class="glass-panel p-6 sm:p-7 mt-6">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="max-w-2xl">
+      <div class="flex items-center gap-2">
+        <span class="badge badge-amber" data-i18n="demo.badge">Demo data</span>
+      </div>
+      <h2 class="text-lg font-extrabold tracking-tight text-deep mt-2" data-i18n="demo.title">Try the map and charts with sample readings</h2>
+      <p class="text-sm text-ink/70 mt-1" data-i18n="demo.text">Loads clearly marked sample submissions spread across Vellore's four zones and 60 wards. Removing demo data never deletes a real report.</p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <button class="btn-secondary btn-sm" type="button" id="demo-load" data-i18n="demo.load">Load demo data</button>
+      <button class="btn-quiet btn-sm" type="button" id="demo-remove" data-i18n="demo.remove">Remove demo data</button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .num-dot { flex: none; display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: .8rem;
+    color: #fff; font-weight: 800; font-size: .9rem; background: linear-gradient(135deg, #0ea5e9, #0d9488);
+    border: 1px solid rgba(255,255,255,.8); }
+  .link-row { display: flex; gap: .75rem; align-items: flex-start; padding: .75rem .9rem; border-radius: 1rem;
+    background: rgba(255,255,255,.65); border: 1px solid rgba(255,255,255,.95); font-size: .95rem;
+    color: #06283f; transition: transform .18s ease, background .2s ease; }
+  .link-row:hover { transform: translateY(-2px); background: #fff; }
+</style>
+{% endblock %}

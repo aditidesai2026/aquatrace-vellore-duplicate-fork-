@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Check my water{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="glass-panel p-5 sm:p-8">
+    <!-- progress -->
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest text-aqua"><span data-i18n="check.step_of">Step</span> <span id="step-current">1</span> / 6</p>
+        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-deep mt-1" id="step-title" data-i18n="check.ph.title">How acidic or alkaline is your water?</h1>
+      </div>
+      <div class="step-dots" id="step-dots" aria-hidden="true">
+        <span class="on"></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+    <div class="progress-track mt-4" role="progressbar" aria-valuemin="1" aria-valuemax="6" aria-valuenow="1" id="progress">
+      <div class="progress-fill" id="progress-fill" style="width:16.6%"></div>
+    </div>
+
+    <form id="wizard" class="mt-6" novalidate>
+      <!-- STEP 1-4: readings -->
+      {% set steps = [
+        {'key': 'ph',              'label': 'pH',              'min': 0,   'max': 14,   'step': 0.1, 'unit': 'pH',   'required': true},
+        {'key': 'turbidity',       'label': 'Turbidity',       'min': 0,   'max': 100,  'step': 0.1, 'unit': 'NTU',  'required': true},
+        {'key': 'tds',             'label': 'TDS',             'min': 0,   'max': 50000,'step': 10,  'unit': 'mg/L', 'required': true},
+        {'key': 'dissolved_oxygen','label': 'Dissolved oxygen','min': 0,   'max': 20,   'step': 0.1, 'unit': 'mg/L', 'required': false}
+      ] %}
+      {% for s in steps %}
+      <section class="wizard-step" data-step="{{ loop.index }}" {% if not loop.first %}hidden{% endif %}>
+        <p class="text-sm text-ink/70 mb-4">
+          {% if s.key == 'ph' %}<span data-i18n="check.ph.help">pH tells you how acidic or alkaline your water is. Safe drinking water sits between 6.5 and 8.5.</span>{% endif %}
+          {% if s.key == 'turbidity' %}<span data-i18n="check.turbidity.help">Turbidity is how cloudy or hazy your water looks. Below 1 NTU is clear; above 5 NTU is a problem.</span>{% endif %}
+          {% if s.key == 'tds' %}<span data-i18n="check.tds.help">TDS is the amount of dissolved stuff in your water. Up to 500 mg/L is fine; above 2000 mg/L is very high.</span>{% endif %}
+          {% if s.key == 'dissolved_oxygen' %}<span data-i18n="check.do.help">Dissolved oxygen shows how much oxygen the water holds. It is optional — tap Skip if your kit cannot measure it.</span>{% endif %}
+        </p>
+
+        <label class="field-label" for="in-{{ s.key }}">
+          <span class="term" tabindex="0" data-i18n="term.{{ s.key }}" data-tip-key="tip.{{ s.key }}">{{ s.label }}</span>
+          <span class="text-ink/60 font-semibold"> ({{ s.unit }})</span>
+        </label>
+
+        <div class="flex items-center gap-3">
+          <input class="input input-num" type="number" inputmode="decimal" id="in-{{ s.key }}" name="{{ s.key }}"
+                 min="{{ s.min }}" max="{{ s.max }}" step="{{ s.step }}" placeholder="—"
+                 aria-describedby="err-{{ s.key }} tip-{{ s.key }}">
+        </div>
+
+        <label class="sr-only" for="range-{{ s.key }}" data-i18n="check.slider_label">Slide to set the value</label>
+        <input type="range" id="range-{{ s.key }}" min="{{ s.min }}" max="{{ s.max }}" step="{{ s.step }}" value="{{ (s.max / 4)|round(1) }}">
+
+        <!-- live colour gauge: green / amber / red -->
+        <div class="glass-inset p-4 mt-3">
+          <div class="flex items-center justify-between gap-3 mb-2">
+            <span class="text-xs font-bold uppercase tracking-widest text-aqua" data-i18n="check.gauge">Live gauge</span>
+            <span class="state-pill state-none" id="state-{{ s.key }}">—</span>
+          </div>
+          <div class="gauge" id="gauge-{{ s.key }}"><span class="gauge-marker" id="marker-{{ s.key }}" style="left:0%"></span></div>
+          <p class="text-xs text-ink/60 mt-2" id="range-{{ s.key }}-hint">
+            {% if s.key == 'ph' %}0 – 14 · <span data-i18n="check.ph.ok">good 6.5–8.5</span>{% endif %}
+            {% if s.key == 'turbidity' %}0 – 100 · <span data-i18n="check.turbidity.ok">good ≤ 1 NTU, problem &gt; 5 NTU</span>{% endif %}
+            {% if s.key == 'tds' %}0 – 50000 · <span data-i18n="check.tds.ok">good ≤ 500, permissible ≤ 2000 mg/L</span>{% endif %}
+            {% if s.key == 'dissolved_oxygen' %}0 – 20 · <span data-i18n="check.do.ok">good ≥ 4 mg/L (project rule)</span>{% endif %}
+          </p>
+        </div>
+
+        <details class="glass-inset p-4 mt-3">
+          <summary class="font-bold text-[.95rem] cursor-pointer text-deep" data-i18n="check.how_measure">How do I measure this?</summary>
+          <div class="text-sm text-ink/75 mt-2 space-y-2">
+            {% if s.key == 'ph' %}<p data-i18n="tip.howto.ph">Use a pH strip or liquid tester. Dip it for the time on the pack, match the colour, and type the number. Test the water cool and still, straight from the tap.</p>{% endif %}
+            {% if s.key == 'turbidity' %}<p data-i18n="tip.howto.turbidity">Fill a clear glass or use your turbidity tube. Compare with the chart in your kit, or judge it: clear = under 1 NTU, milky = 5 NTU or more.</p>{% endif %}
+            {% if s.key == 'tds' %}<p data-i18n="tip.howto.tds">Switch on the TDS meter, dip it in the sample, wait for the reading to settle and type the mg/L number. Do not use it in very hot water.</p>{% endif %}
+            {% if s.key == 'dissolved_oxygen' %}<p data-i18n="tip.howto.do">Use a DO probe or a chemical test kit. Let the sample sit still, wait for the number to stabilise, then type the mg/L value.</p>{% endif %}
+            <p class="text-ink/60" data-i18n="tip.general">Rinse the container with the sample water first, and test near the time you collected the water.</p>
+          </div>
+        </details>
+
+        <p class="error-text" id="err-{{ s.key }}" role="alert" hidden></p>
+
+        {% if not s.required %}
+        <div class="mt-4 flex flex-wrap gap-3">
+          <button type="button" class="btn-quiet" id="skip-do" data-i18n="check.skip">Skip this step</button>
+        </div>
+        {% endif %}
+      </section>
+      {% endfor %}
+
+      <!-- STEP 5: what have you noticed -->
+      <section class="wizard-step" data-step="5" hidden>
+        <p class="text-sm text-ink/70 mb-4" data-i18n="check.notice_help">Tap everything you can see, smell or taste. This is optional but it makes the diagnosis much better.</p>
+
+        <fieldset>
+          <legend class="field-label" data-i18n="check.notice_legend">What have you noticed?</legend>
+          <div class="flex flex-wrap gap-2.5">
+            {% set chips = [
+              ('salty_taste', '🧂'), ('bad_smell', '👃'), ('cloudy_water', '🌫️'),
+              ('strange_colour', '🟤'), ('no_supply', '🚱'), ('low_pressure', '💧'), ('leak', '🚰')
+            ] %}
+            {% for value, emoji in chips %}
+            <label class="chip">
+              <input type="checkbox" name="reports" value="{{ value }}">
+              <span class="tick" aria-hidden="true">✓</span>
+              <span aria-hidden="true">{{ emoji }}</span>
+              <span data-i18n="report.{{ value }}">{{ value }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <div class="glass-inset p-4 mt-5">
+          <label class="chip !bg-white/90 w-full justify-start">
+            <input type="checkbox" name="ill" value="1" id="ill-check">
+            <span class="tick" aria-hidden="true">✓</span>
+            <span data-i18n="check.ill">Has anyone become ill after drinking this water?</span>
+          </label>
+          <p class="text-xs text-ink/65 mt-2" data-i18n="check.ill_hint">If yes, we will show a doctor reminder with your result.</p>
+        </div>
+
+        <div class="grid gap-4 mt-5">
+          <div>
+            <label class="field-label" for="in-photo" data-i18n="check.photo">Add a photo (optional)</label>
+            <input class="input" type="file" accept="image/*" id="in-photo" name="photo">
+            <p class="text-xs text-ink/60 mt-1" data-i18n="check.photo_hint">A picture of the water, the tap or a leak helps officials a lot.</p>
+          </div>
+          <div>
+            <label class="field-label" for="in-note" data-i18n="check.note">Short note (optional)</label>
+            <textarea class="textarea" id="in-note" name="note" maxlength="500" placeholder="…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 6: location -->
+      <section class="wizard-step" data-step="6" hidden>
+        <p class="text-sm text-ink/70 mb-4" data-i18n="check.location_help">AquaTrace serves Vellore only. Use your location, or pick your zone and ward from the lists.</p>
+
+        <div class="glass-inset p-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <button type="button" class="btn-secondary" id="use-location">
+              <span aria-hidden="true">📍</span> <span data-i18n="check.use_location">Use my location</span>
+            </button>
+            <span class="text-sm text-ink/70" id="location-status" data-i18n="check.location_none">No location set yet.</span>
+          </div>
+          <div id="outside-vellore" class="hidden mt-3 text-sm font-semibold text-rose-700 bg-rose-50/80 border border-rose-200 rounded-xl p-3" role="alert">
+            <span data-i18n="check.outside">AquaTrace currently serves Vellore only. Please pick your ward manually below.</span>
+          </div>
+          <div id="map-pick" class="mt-3 h-56 rounded-2xl overflow-hidden border border-white/90 hidden"></div>
+          <p class="text-xs text-ink/60 mt-2" data-i18n="check.pin_hint">Drag the pin to your street. Only your ward is stored — never your exact point.</p>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2 mt-4">
+          <div>
+            <label class="field-label" for="in-zone" data-i18n="check.zone">Zone</label>
+            <select class="select" id="in-zone" name="zone">
+              {% for z in ZONES %}
+                <option value="{{ z }}" {% if z == DEFAULT_ZONE %}selected{% endif %}>{{ z }}{% if z == DEFAULT_ZONE %} · {% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="field-label" for="in-ward" data-i18n="check.ward">Ward</label>
+            <select class="select" id="in-ward" name="ward">
+              {% for w in WARDS_BY_ZONE[DEFAULT_ZONE] %}
+                <option value="{{ w }}" {% if loop.first %}selected{% endif %}>{{ w }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="field-label" for="in-name" data-i18n="check.first_name">Your first name (optional)</label>
+          <input class="input" type="text" id="in-name" name="first_name" maxlength="40" autocomplete="given-name">
+          <p class="text-xs text-ink/60 mt-1" data-i18n="check.privacy">That is the only personal detail AquaTrace keeps. No login, no phone number, no email.</p>
+        </div>
+      </section>
+
+      <p class="error-text mt-4" id="form-error" role="alert" hidden></p>
+    </form>
+
+    <!-- navigation -->
+    <div class="mt-7 flex items-center justify-between gap-3">
+      <button type="button" class="btn-secondary" id="btn-back" hidden>
+        <span aria-hidden="true">←</span> <span data-i18n="check.back">Back</span>
+      </button>
+      <div class="flex-1"></div>
+      <button type="button" class="btn-primary" id="btn-next">
+        <span data-i18n="check.next">Next</span> <span aria-hidden="true">→</span>
+      </button>
+      <button type="submit" class="btn-primary" id="btn-submit" form="wizard" hidden>
+        <span data-i18n="check.submit">See my result</span> <span aria-hidden="true">✓</span>
+      </button>
+    </div>
+
+    <p class="text-xs text-ink/55 mt-5" data-i18n="check.disclaimer">AquaTrace results are indicative. They do not prove water is safe to drink — please confirm with a laboratory test.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  window.AQUATRACE_AREAS = {{ {
+    "zones": ZONES, "wards": WARDS_BY_ZONE, "defaultZone": DEFAULT_ZONE,
+    "center": [12.9236, 79.132],
+    "bounds": [[12.85, 79.05], [13.00, 79.20]]
+  }|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/wizard.js') }}"></script>
+{% endblock %}
